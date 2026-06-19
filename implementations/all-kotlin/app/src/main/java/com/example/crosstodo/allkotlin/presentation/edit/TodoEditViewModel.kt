@@ -38,7 +38,12 @@ class TodoEditViewModel @Inject constructor(
     init {
         if (todoId != null) {
             viewModelScope.launch {
-                val item = repository.getById(todoId) ?: return@launch
+                val item = repository.getById(todoId)
+                if (item == null) {
+                    // The item was removed (e.g. deleted elsewhere); leave the screen.
+                    _navigateBack.send(Unit)
+                    return@launch
+                }
                 loadedItem = item
                 titleTouched = true
                 _uiState.update {
