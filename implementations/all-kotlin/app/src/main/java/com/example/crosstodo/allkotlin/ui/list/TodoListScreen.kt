@@ -27,6 +27,10 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextDecoration
@@ -108,9 +112,22 @@ private fun TodoListContent(
         return
     }
 
+    // Local working copy reordered optimistically during a drag. The database is
+    // updated only once, when the drag ends, to avoid per-move writes and to keep
+    // the list consistent across multi-position drags.
+    val displayItems = remember { mutableStateListOf<TodoItem>() }
+    var draggingId by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(uiState.items) {
+        if (draggingId == null) {
+            displayItems.clear()
+            displayItems.addAll(uiState.items)
+        }
+    }
+
     val lazyListState = rememberLazyListState()
     val reorderableState = rememberReorderableLazyListState(lazyListState) { from, to ->
-        onReorder(from.index, to.index)
+        displayItems.add(to.index, displayItems.removeAt(from.index))
     }
 
     LazyColumn(
@@ -124,7 +141,7 @@ private fun TodoListContent(
         ),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        items(uiState.items, key = { it.id }) { item ->
+        items(displayItems, key = { it.id }) { item ->
             ReorderableItem(reorderableState, key = item.id) { _ ->
                 TodoRow(
                     item = item,
@@ -134,7 +151,20 @@ private fun TodoListContent(
                     dragHandle = {
                         IconButton(
                             onClick = {},
-                            modifier = Modifier.draggableHandle(),
+                            modifier = Modifier.draggableHandle(
+                                onDragStarted = { draggingId = item.id },
+                                onDragStopped = {
+                                    val id = draggingId
+                                    draggingId = null
+                                    if (id != null) {
+                                        val from = uiState.items.indexOfFirst { it.id == id }
+                                        val to = displayItems.indexOfFirst { it.id == id }
+                                        if (from != -1 && to != -1 && from != to) {
+                                            onReorder(from, to)
+                                        }
+                                    }
+                                },
+                            ),
                         ) {
                             Icon(
                                 Icons.Default.DragHandle,
