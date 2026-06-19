@@ -13,6 +13,9 @@ interface TodoDao {
     @Query("SELECT * FROM todo_item ORDER BY sort_order ASC")
     fun observeAll(): Flow<List<TodoEntity>>
 
+    @Query("SELECT MAX(sort_order) FROM todo_item")
+    suspend fun getMaxSortOrder(): Int?
+
     @Query("SELECT * FROM todo_item WHERE id = :id")
     suspend fun getById(id: String): TodoEntity?
 

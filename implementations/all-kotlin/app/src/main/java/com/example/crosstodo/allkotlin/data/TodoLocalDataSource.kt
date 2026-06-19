@@ -7,6 +7,7 @@ import javax.inject.Inject
 /** Abstraction over the local persistence layer. Works in terms of [TodoItem]. */
 interface TodoLocalDataSource {
     fun observeAll(): Flow<List<TodoItem>>
+    suspend fun getMaxSortOrder(): Int?
     suspend fun getById(id: String): TodoItem?
     suspend fun insert(item: TodoItem)
     suspend fun update(item: TodoItem)
@@ -21,6 +22,8 @@ class RoomTodoLocalDataSource @Inject constructor(
 
     override fun observeAll(): Flow<List<TodoItem>> =
         dao.observeAll().map { entities -> entities.map { it.toDomain() } }
+
+    override suspend fun getMaxSortOrder(): Int? = dao.getMaxSortOrder()
 
     override suspend fun getById(id: String): TodoItem? = dao.getById(id)?.toDomain()
 

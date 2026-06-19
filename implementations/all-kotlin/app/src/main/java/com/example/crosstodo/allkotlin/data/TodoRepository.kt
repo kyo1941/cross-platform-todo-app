@@ -1,7 +1,6 @@
 package com.example.crosstodo.allkotlin.data
 
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
 import java.util.UUID
 import javax.inject.Inject
 
@@ -29,8 +28,7 @@ class DefaultTodoRepository @Inject constructor(
 
     override suspend fun add(title: String, memo: String?): TodoItem {
         val now = System.currentTimeMillis()
-        val nextSortOrder = (localDataSource.observeAll().first()
-            .maxOfOrNull { it.sortOrder } ?: -1) + 1
+        val nextSortOrder = (localDataSource.getMaxSortOrder() ?: -1) + 1
         val item = TodoItem(
             id = UUID.randomUUID().toString(),
             title = title.trim(),
