@@ -3,7 +3,6 @@ package com.example.crosstodo.allkotlin.presentation.edit
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.crosstodo.allkotlin.data.TodoItem
 import com.example.crosstodo.allkotlin.data.TodoRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -23,17 +22,16 @@ class TodoEditViewModel @Inject constructor(
 
     private val todoId: String? = savedStateHandle.get<String>(ARG_TODO_ID)
 
-    private val _uiState = MutableStateFlow(TodoEditUiState(id = todoId, isEditMode = todoId != null))
+    private val _uiState = MutableStateFlow(
+        TodoEditUiState(mode = if (todoId != null) TodoEditMode.Loading else TodoEditMode.Add),
+    )
     val uiState: StateFlow<TodoEditUiState> = _uiState.asStateFlow()
 
     private val _navigateBack = Channel<Unit>(Channel.BUFFERED)
     val navigateBack = _navigateBack.receiveAsFlow()
 
-    /** Original item in edit mode; preserves isDone/sortOrder/createdAt on save. */
-    private var loadedItem: TodoItem? = null
-
-    /** Whether the title field has been edited, to avoid an error on a pristine form. */
-    private var titleTouched = false
+    /** Whether the title field has been edited at least once, to avoid an error on a pristine form. */
+    private var titleChangedOnce = false
 
     init {
         if (todoId != null) {
@@ -44,10 +42,9 @@ class TodoEditViewModel @Inject constructor(
                     _navigateBack.send(Unit)
                     return@launch
                 }
-                loadedItem = item
-                titleTouched = true
+                titleChangedOnce = true
                 _uiState.update {
-                    it.copy(title = item.title, memo = item.memo.orEmpty())
+                    it.copy(mode = TodoEditMode.Edit(item), title = item.title, memo = item.memo.orEmpty())
                 }
                 validate()
             }
@@ -55,7 +52,7 @@ class TodoEditViewModel @Inject constructor(
     }
 
     fun onTitleChange(value: String) {
-        titleTouched = true
+        titleChangedOnce = true
         _uiState.update { it.copy(title = value) }
         validate()
     }
@@ -71,17 +68,15 @@ class TodoEditViewModel @Inject constructor(
         val title = state.title.trim()
         val memo = state.memo.trim().takeUnless { it.isEmpty() }
         viewModelScope.launch {
-            val existing = loadedItem
-            if (existing != null) {
-                repository.update(
-                    existing.copy(
+            when (val mode = state.mode) {
+                is TodoEditMode.Edit -> repository.update(
+                    mode.originalItem.copy(
                         title = title,
                         memo = memo,
                         updatedAt = System.currentTimeMillis(),
                     ),
                 )
-            } else {
-                repository.add(title, memo)
+                TodoEditMode.Add, TodoEditMode.Loading -> repository.add(title, memo)
             }
             _navigateBack.send(Unit)
         }
@@ -95,7 +90,7 @@ class TodoEditViewModel @Inject constructor(
         val state = _uiState.value
         val trimmedTitleLength = state.title.trim().length
         val titleError = when {
-            trimmedTitleLength == 0 -> if (titleTouched) ERROR_TITLE_REQUIRED else null
+            trimmedTitleLength == 0 -> if (titleChangedOnce) ERROR_TITLE_REQUIRED else null
             trimmedTitleLength > TITLE_MAX_LENGTH -> ERROR_TITLE_TOO_LONG
             else -> null
         }

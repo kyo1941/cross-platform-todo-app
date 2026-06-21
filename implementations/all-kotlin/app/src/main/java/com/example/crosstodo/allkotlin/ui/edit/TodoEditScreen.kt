@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.crosstodo.allkotlin.presentation.edit.TodoEditMode
 import com.example.crosstodo.allkotlin.presentation.edit.TodoEditViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -39,7 +40,7 @@ fun TodoEditScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (uiState.isEditMode) "TODOを編集" else "TODOを追加") },
+                title = { Text(if (uiState.mode is TodoEditMode.Add) "TODOを追加" else "TODOを編集") },
                 navigationIcon = {
                     IconButton(onClick = viewModel::onCancelClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "戻る")
