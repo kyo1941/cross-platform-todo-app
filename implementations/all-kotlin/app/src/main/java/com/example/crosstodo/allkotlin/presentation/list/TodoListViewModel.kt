@@ -29,7 +29,11 @@ class TodoListViewModel @Inject constructor(
 
     val uiState: StateFlow<TodoListUiState> =
         combine(repository.observeAll(), deleteTargetId) { items, targetId ->
-            TodoListUiState(items = items, isLoading = false, deleteTargetId = targetId)
+            val deleteConfirmation = targetId
+                ?.let { id -> items.firstOrNull { it.id == id } }
+                ?.let { DeleteConfirmation.Pending(it) }
+                ?: DeleteConfirmation.None
+            TodoListUiState(items = items, isLoading = false, deleteConfirmation = deleteConfirmation)
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),

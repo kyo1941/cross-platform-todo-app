@@ -39,8 +39,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.crosstodo.allkotlin.data.TodoItem
+import com.example.crosstodo.allkotlin.presentation.list.DeleteConfirmation
 import com.example.crosstodo.allkotlin.presentation.list.TodoListEvent
-import com.example.crosstodo.allkotlin.presentation.list.TodoListUiState
 import com.example.crosstodo.allkotlin.presentation.list.TodoListViewModel
 import com.example.crosstodo.allkotlin.ui.components.DeleteConfirmDialog
 import sh.calvin.reorderable.ReorderableItem
@@ -73,8 +73,9 @@ fun TodoListScreen(
         },
     ) { innerPadding ->
         TodoListContent(
-            uiState = uiState,
-            contentPadding = innerPadding,
+            todoItems = uiState.items,
+            isLoading = uiState.isLoading,
+            modifier = Modifier.padding(innerPadding),
             onToggleDone = viewModel::onToggleDone,
             onItemClick = viewModel::onItemClick,
             onDeleteRequest = viewModel::onDeleteRequest,
@@ -82,9 +83,9 @@ fun TodoListScreen(
         )
     }
 
-    uiState.deleteTarget?.let { target ->
+    (uiState.deleteConfirmation as? DeleteConfirmation.Pending)?.let { pending ->
         DeleteConfirmDialog(
-            title = target.title,
+            title = pending.target.title,
             onConfirm = viewModel::onDeleteConfirm,
             onDismiss = viewModel::onDeleteCancel,
         )
@@ -93,18 +94,17 @@ fun TodoListScreen(
 
 @Composable
 private fun TodoListContent(
-    uiState: TodoListUiState,
-    contentPadding: PaddingValues,
+    todoItems: List<TodoItem>,
+    isLoading: Boolean,
+    modifier: Modifier = Modifier,
     onToggleDone: (String) -> Unit,
     onItemClick: (String) -> Unit,
     onDeleteRequest: (String) -> Unit,
     onReorder: (Int, Int) -> Unit,
 ) {
-    if (!uiState.isLoading && uiState.items.isEmpty()) {
+    if (!isLoading && todoItems.isEmpty()) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(contentPadding),
+            modifier = modifier.fillMaxSize(),
             contentAlignment = Alignment.Center,
         ) {
             Text("TODOがありません", style = MaterialTheme.typography.bodyLarge)
@@ -118,10 +118,10 @@ private fun TodoListContent(
     val displayItems = remember { mutableStateListOf<TodoItem>() }
     var draggingId by remember { mutableStateOf<String?>(null) }
 
-    LaunchedEffect(uiState.items) {
+    LaunchedEffect(todoItems) {
         if (draggingId == null) {
             displayItems.clear()
-            displayItems.addAll(uiState.items)
+            displayItems.addAll(todoItems)
         }
     }
 
@@ -132,13 +132,8 @@ private fun TodoListContent(
 
     LazyColumn(
         state = lazyListState,
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(
-            top = contentPadding.calculateTopPadding() + 8.dp,
-            bottom = contentPadding.calculateBottomPadding() + 88.dp,
-            start = 12.dp,
-            end = 12.dp,
-        ),
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(top = 8.dp, bottom = 88.dp, start = 12.dp, end = 12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         items(displayItems, key = { it.id }) { item ->
@@ -157,7 +152,7 @@ private fun TodoListContent(
                                     val id = draggingId
                                     draggingId = null
                                     if (id != null) {
-                                        val from = uiState.items.indexOfFirst { it.id == id }
+                                        val from = todoItems.indexOfFirst { it.id == id }
                                         val to = displayItems.indexOfFirst { it.id == id }
                                         if (from != -1 && to != -1 && from != to) {
                                             onReorder(from, to)
