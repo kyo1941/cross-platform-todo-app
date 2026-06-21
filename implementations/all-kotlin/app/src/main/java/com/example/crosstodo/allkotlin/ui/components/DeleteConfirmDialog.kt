@@ -7,7 +7,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 
 /**
- * S03: confirmation dialog shown before deleting a TODO item.
+ * S03: confirmation dialog shown before deleting a to-do entry.
  */
 @Composable
 fun DeleteConfirmDialog(

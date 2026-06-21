@@ -1,7 +1,7 @@
 package com.example.crosstodo.allkotlin.data
 
 /**
- * Domain model for a single TODO item. Shared across all implementations
+ * Domain model for a single to-do entry. Shared across all implementations
  * (see the data model in the project spec).
  */
 data class TodoItem(

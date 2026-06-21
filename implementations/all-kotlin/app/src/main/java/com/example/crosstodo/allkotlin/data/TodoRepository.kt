@@ -5,7 +5,7 @@ import java.util.UUID
 import javax.inject.Inject
 
 /**
- * Single source of truth for TODO data. The UI layer always goes through the
+ * Single source of truth for to-do data. The UI layer always goes through the
  * repository (see the architecture guideline in the project spec).
  */
 interface TodoRepository {
