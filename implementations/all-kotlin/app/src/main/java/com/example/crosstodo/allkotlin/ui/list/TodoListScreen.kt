@@ -83,20 +83,23 @@ fun TodoListScreen(
         )
     }
 
-    (uiState.deleteConfirmation as? DeleteConfirmation.Pending)?.let { pending ->
-        DeleteConfirmDialog(
-            title = pending.target.title,
-            onConfirm = viewModel::onDeleteConfirm,
-            onDismiss = viewModel::onDeleteCancel,
-        )
+    when (val deleteConfirmation = uiState.deleteConfirmation) {
+        DeleteConfirmation.None -> Unit
+        is DeleteConfirmation.Pending -> {
+            DeleteConfirmDialog(
+                title = deleteConfirmation.target.title,
+                onConfirm = viewModel::onDeleteConfirm,
+                onDismiss = viewModel::onDeleteCancel,
+            )
+        }
     }
 }
 
 @Composable
 private fun TodoListContent(
+    modifier: Modifier = Modifier,
     todoItems: List<TodoItem>,
     isLoading: Boolean,
-    modifier: Modifier = Modifier,
     onToggleDone: (String) -> Unit,
     onItemClick: (String) -> Unit,
     onDeleteRequest: (String) -> Unit,
