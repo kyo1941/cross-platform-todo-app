@@ -2,17 +2,35 @@ package com.example.crosstodo.allkotlin.presentation.edit
 
 import com.example.crosstodo.allkotlin.data.TodoItem
 
-sealed interface TodoEditMode {
-    data object Add : TodoEditMode
-    data object Loading : TodoEditMode
-    data class Edit(val originalItem: TodoItem) : TodoEditMode
-}
+sealed interface TodoEditUiState {
+    val title: String
+    val memo: String
+    val titleError: String?
+    val memoError: String?
+    val canSave: Boolean
 
-data class TodoEditUiState(
-    val mode: TodoEditMode = TodoEditMode.Add,
-    val title: String = "",
-    val memo: String = "",
-    val titleError: String? = null,
-    val memoError: String? = null,
-    val canSave: Boolean = false,
-)
+    data object Loading : TodoEditUiState {
+        override val title: String = ""
+        override val memo: String = ""
+        override val titleError: String? = null
+        override val memoError: String? = null
+        override val canSave: Boolean = false
+    }
+
+    data class Add(
+        override val title: String = "",
+        override val memo: String = "",
+        override val titleError: String? = null,
+        override val memoError: String? = null,
+        override val canSave: Boolean = false,
+    ) : TodoEditUiState
+
+    data class Edit(
+        val originalItem: TodoItem,
+        override val title: String = originalItem.title,
+        override val memo: String = originalItem.memo.orEmpty(),
+        override val titleError: String? = null,
+        override val memoError: String? = null,
+        override val canSave: Boolean = true,
+    ) : TodoEditUiState
+}

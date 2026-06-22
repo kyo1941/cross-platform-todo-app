@@ -23,7 +23,7 @@ class TodoEditViewModel @Inject constructor(
     private val todoId: String? = savedStateHandle.get<String>(ARG_TODO_ID)
 
     private val _uiState = MutableStateFlow(
-        TodoEditUiState(mode = if (todoId != null) TodoEditMode.Loading else TodoEditMode.Add),
+        if (todoId != null) TodoEditUiState.Loading else TodoEditUiState.Add(),
     )
     val uiState: StateFlow<TodoEditUiState> = _uiState.asStateFlow()
 
@@ -43,22 +43,19 @@ class TodoEditViewModel @Inject constructor(
                     return@launch
                 }
                 titleChangedOnce = true
-                _uiState.update {
-                    it.copy(mode = TodoEditMode.Edit(item), title = item.title, memo = item.memo.orEmpty())
-                }
-                validate()
+                _uiState.value = TodoEditUiState.Edit(originalItem = item)
             }
         }
     }
 
     fun onTitleChange(value: String) {
         titleChangedOnce = true
-        _uiState.update { it.copy(title = value) }
+        _uiState.update { it.copyForm(title = value) }
         validate()
     }
 
     fun onMemoChange(value: String) {
-        _uiState.update { it.copy(memo = value) }
+        _uiState.update { it.copyForm(memo = value) }
         validate()
     }
 
@@ -68,15 +65,16 @@ class TodoEditViewModel @Inject constructor(
         val title = state.title.trim()
         val memo = state.memo.trim().takeUnless { it.isEmpty() }
         viewModelScope.launch {
-            when (val mode = state.mode) {
-                is TodoEditMode.Edit -> repository.update(
-                    mode.originalItem.copy(
+            when (state) {
+                is TodoEditUiState.Edit -> repository.update(
+                    state.originalItem.copy(
                         title = title,
                         memo = memo,
                         updatedAt = System.currentTimeMillis(),
                     ),
                 )
-                TodoEditMode.Add, TodoEditMode.Loading -> repository.add(title, memo)
+                is TodoEditUiState.Add -> repository.add(title, memo)
+                TodoEditUiState.Loading -> return@launch
             }
             _navigateBack.send(Unit)
         }
@@ -95,10 +93,36 @@ class TodoEditViewModel @Inject constructor(
             else -> null
         }
         val memoError = if (state.memo.length > MEMO_MAX_LENGTH) ERROR_MEMO_TOO_LONG else null
-        val canSave = trimmedTitleLength in 1..TITLE_MAX_LENGTH && memoError == null
+        val canSave = state !is TodoEditUiState.Loading &&
+            trimmedTitleLength in 1..TITLE_MAX_LENGTH &&
+            memoError == null
         _uiState.update {
-            it.copy(titleError = titleError, memoError = memoError, canSave = canSave)
+            it.copyForm(titleError = titleError, memoError = memoError, canSave = canSave)
         }
+    }
+
+    private fun TodoEditUiState.copyForm(
+        title: String = this.title,
+        memo: String = this.memo,
+        titleError: String? = this.titleError,
+        memoError: String? = this.memoError,
+        canSave: Boolean = this.canSave,
+    ): TodoEditUiState = when (this) {
+        is TodoEditUiState.Add -> copy(
+            title = title,
+            memo = memo,
+            titleError = titleError,
+            memoError = memoError,
+            canSave = canSave,
+        )
+        is TodoEditUiState.Edit -> copy(
+            title = title,
+            memo = memo,
+            titleError = titleError,
+            memoError = memoError,
+            canSave = canSave,
+        )
+        TodoEditUiState.Loading -> this
     }
 
     companion object {
