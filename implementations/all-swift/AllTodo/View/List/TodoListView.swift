@@ -68,6 +68,11 @@ struct TodoListView: View {
         }
         .navigationTitle("TODO")
         .toolbar {
+            if let viewModel, !viewModel.items.isEmpty {
+                ToolbarItem(placement: .topBarLeading) {
+                    EditButton()
+                }
+            }
             ToolbarItem(placement: .primaryAction) {
                 Button {
                     navigateToAdd = true
@@ -115,7 +120,8 @@ struct TodoListView: View {
                     viewModel.onReorder(fromOffsets: from, toOffset: to)
                 }
             }
-            .listStyle(.plain)
+            .listStyle(.insetGrouped)
+            .animation(.default, value: viewModel.items.map(\.id))
             .deleteConfirmDialog(
                 title: viewModel.deleteTarget?.title,
                 onConfirm: { viewModel.onDeleteConfirm() },
