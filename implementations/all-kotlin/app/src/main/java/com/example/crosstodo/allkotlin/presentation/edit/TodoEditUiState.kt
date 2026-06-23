@@ -8,6 +8,7 @@ sealed interface TodoEditUiState {
     val titleError: String?
     val memoError: String?
     val canSave: Boolean
+    val isSaving: Boolean
 
     data object Loading : TodoEditUiState {
         override val title: String = ""
@@ -15,6 +16,7 @@ sealed interface TodoEditUiState {
         override val titleError: String? = null
         override val memoError: String? = null
         override val canSave: Boolean = false
+        override val isSaving: Boolean = false
     }
 
     data class Add(
@@ -23,6 +25,7 @@ sealed interface TodoEditUiState {
         override val titleError: String? = null,
         override val memoError: String? = null,
         override val canSave: Boolean = false,
+        override val isSaving: Boolean = false,
     ) : TodoEditUiState
 
     data class Edit(
@@ -32,5 +35,6 @@ sealed interface TodoEditUiState {
         override val titleError: String? = null,
         override val memoError: String? = null,
         override val canSave: Boolean = true,
+        override val isSaving: Boolean = false,
     ) : TodoEditUiState
 }

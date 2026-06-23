@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -147,28 +148,27 @@ private fun TodoListContent(
                     onClick = { onItemClick(item.id) },
                     onDeleteRequest = { onDeleteRequest(item.id) },
                     dragHandle = {
-                        IconButton(
-                            onClick = {},
-                            modifier = Modifier.draggableHandle(
-                                onDragStarted = { draggingId = item.id },
-                                onDragStopped = {
-                                    val id = draggingId
-                                    draggingId = null
-                                    if (id != null) {
-                                        val from = todoItems.indexOfFirst { it.id == id }
-                                        val to = displayItems.indexOfFirst { it.id == id }
-                                        if (from != -1 && to != -1 && from != to) {
-                                            onReorder(from, to)
+                        Icon(
+                            Icons.Default.DragHandle,
+                            contentDescription = "並び替え",
+                            modifier = Modifier
+                                .size(48.dp)
+                                .draggableHandle(
+                                    onDragStarted = { draggingId = item.id },
+                                    onDragStopped = {
+                                        val id = draggingId
+                                        draggingId = null
+                                        if (id != null) {
+                                            val from = todoItems.indexOfFirst { it.id == id }
+                                            val to = displayItems.indexOfFirst { it.id == id }
+                                            if (from != -1 && to != -1 && from != to) {
+                                                onReorder(from, to)
+                                            }
                                         }
-                                    }
-                                },
-                            ),
-                        ) {
-                            Icon(
-                                Icons.Default.DragHandle,
-                                contentDescription = "並び替え",
-                            )
-                        }
+                                    },
+                                )
+                                .padding(12.dp),
+                        )
                     },
                 )
             }

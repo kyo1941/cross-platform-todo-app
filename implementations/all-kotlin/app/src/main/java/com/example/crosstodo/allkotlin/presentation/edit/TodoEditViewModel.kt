@@ -61,7 +61,8 @@ class TodoEditViewModel @Inject constructor(
 
     fun onSaveClick() {
         val state = _uiState.value
-        if (!state.canSave) return
+        if (!state.canSave || state.isSaving) return
+        _uiState.update { it.copyForm(isSaving = true, canSave = false) }
         val title = state.title.trim()
         val memo = state.memo.trim().takeUnless { it.isEmpty() }
         viewModelScope.launch {
@@ -94,6 +95,7 @@ class TodoEditViewModel @Inject constructor(
         }
         val memoError = if (state.memo.length > MEMO_MAX_LENGTH) ERROR_MEMO_TOO_LONG else null
         val canSave = state !is TodoEditUiState.Loading &&
+            !state.isSaving &&
             trimmedTitleLength in 1..TITLE_MAX_LENGTH &&
             memoError == null
         _uiState.update {
@@ -107,6 +109,7 @@ class TodoEditViewModel @Inject constructor(
         titleError: String? = this.titleError,
         memoError: String? = this.memoError,
         canSave: Boolean = this.canSave,
+        isSaving: Boolean = this.isSaving,
     ): TodoEditUiState = when (this) {
         is TodoEditUiState.Add -> copy(
             title = title,
@@ -114,6 +117,7 @@ class TodoEditViewModel @Inject constructor(
             titleError = titleError,
             memoError = memoError,
             canSave = canSave,
+            isSaving = isSaving,
         )
         is TodoEditUiState.Edit -> copy(
             title = title,
@@ -121,6 +125,7 @@ class TodoEditViewModel @Inject constructor(
             titleError = titleError,
             memoError = memoError,
             canSave = canSave,
+            isSaving = isSaving,
         )
         TodoEditUiState.Loading -> this
     }

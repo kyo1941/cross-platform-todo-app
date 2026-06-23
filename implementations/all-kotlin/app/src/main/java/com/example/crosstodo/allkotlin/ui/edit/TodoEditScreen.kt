@@ -51,7 +51,10 @@ fun TodoEditScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = viewModel::onCancelClick) {
+                    IconButton(
+                        onClick = viewModel::onCancelClick,
+                        enabled = !uiState.isSaving,
+                    ) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "戻る")
                     }
                 },
@@ -71,6 +74,7 @@ fun TodoEditScreen(
                 singleLine = true,
                 isError = uiState.titleError != null,
                 supportingText = uiState.titleError?.let { { Text(it) } },
+                enabled = !uiState.isSaving,
                 modifier = Modifier.fillMaxWidth(),
             )
 
@@ -81,6 +85,7 @@ fun TodoEditScreen(
                 isError = uiState.memoError != null,
                 supportingText = uiState.memoError?.let { { Text(it) } },
                 minLines = 3,
+                enabled = !uiState.isSaving,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 16.dp),
