@@ -1,6 +1,5 @@
 import Foundation
 import SwiftData
-import SwiftUI
 
 @MainActor
 @Observable
@@ -56,12 +55,21 @@ final class TodoListViewModel {
         deleteTargetId = nil
     }
 
-    func onReorder(fromOffsets: IndexSet, toOffset: Int) {
-        var reordered = items
-        reordered.move(fromOffsets: fromOffsets, toOffset: toOffset)
-        items = reordered
+    func onMoveItem(fromIndex: Int, toIndex: Int) {
+        guard fromIndex != toIndex,
+              fromIndex >= 0,
+              fromIndex < items.count,
+              toIndex >= 0,
+              toIndex < items.count
+        else { return }
+
+        let item = items.remove(at: fromIndex)
+        items.insert(item, at: toIndex)
+    }
+
+    func onReorderComplete() {
         do {
-            try repository.reorder(orderedIds: reordered.map { $0.id })
+            try repository.reorder(orderedIds: items.map { $0.id })
         } catch {
             loadItems()
         }
