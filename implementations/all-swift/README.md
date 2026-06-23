@@ -5,18 +5,23 @@ Swift + SwiftUI and SwiftData.
 
 ## Architecture
 
-MVVM + Repository, in three layers:
+MVVM + Repository + DataSource, with dependencies injected through SwiftUI
+environment values:
 
 ```
-View/ (SwiftUI views)  ->  ViewModel/ (@Observable)  ->  Data/ (Repository -> SwiftData)
+View/ (SwiftUI views)  ->  ViewModel/ (@Observable)
+                         ->  Repository protocol
+                         ->  DataSource protocol
+                         ->  SwiftData
 ```
 
-- `Data/` — `TodoItem` SwiftData model, `TodoRepository`.
-- `ViewModel/` — `TodoListViewModel`, `TodoEditViewModel`.
+- `Data/` — domain `TodoItem`, SwiftData `TodoEntity`, repository and data-source protocols.
+- `Dependencies/` — app dependency container and SwiftUI environment key.
+- `ViewModel/` — typed UI state and events for list/edit screens.
 - `View/` — `TodoListView` (S01), `TodoEditView` (S02), `DeleteConfirmDialog` (S03).
 
-The list observes the repository reactively, so toggles, deletes,
-and reorders propagate without the ViewModel rewriting the list.
+The list ViewModel observes the repository stream. Mutations go through the
+repository, which publishes the latest ordered list after successful writes.
 
 ## Build & run
 

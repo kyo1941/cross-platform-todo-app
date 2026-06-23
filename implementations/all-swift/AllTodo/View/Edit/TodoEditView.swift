@@ -1,11 +1,10 @@
 import SwiftUI
 
 struct TodoEditView: View {
-    @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel: TodoEditViewModel?
-    @State private var showDiscardAlert = false
 
+    let repository: any TodoRepository
     let todoId: String?
 
     var body: some View {
@@ -16,53 +15,56 @@ struct TodoEditView: View {
                 ProgressView()
             }
         }
-        .navigationTitle(viewModel?.navigationTitle ?? "TODOを編集")
+        .navigationTitle(viewModel?.uiState.navigationTitle ?? "TODOを編集")
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .navigation) {
                 Button {
-                    handleBack()
+                    viewModel?.onCancelClick()
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: "chevron.backward")
                         Text("戻る")
                     }
                 }
-                .disabled(viewModel?.isSaving == true)
+                .disabled(viewModel?.uiState.isSaving == true)
             }
-        }
-        .alert("変更の破棄", isPresented: $showDiscardAlert) {
-            Button("キャンセル", role: .cancel) {}
-            Button("破棄", role: .destructive) { dismiss() }
-        } message: {
-            Text("編集内容が保存されていません。破棄しますか？")
         }
         .onAppear {
             if viewModel == nil {
-                let repo = TodoRepository(modelContext: modelContext)
-                viewModel = TodoEditViewModel(repository: repo, todoId: todoId)
+                viewModel = TodoEditViewModel(repository: repository, todoId: todoId)
             }
         }
-        .onChange(of: viewModel?.shouldDismiss) { _, newValue in
-            if newValue == true {
+        .onChange(of: viewModel?.event) { _, newValue in
+            guard let event = newValue else { return }
+            switch event {
+            case .navigateBack:
                 dismiss()
             }
+            viewModel?.clearEvent()
         }
     }
 
     @ViewBuilder
     private func editForm(viewModel: TodoEditViewModel) -> some View {
+        let uiState = viewModel.uiState
         ScrollView {
             VStack(spacing: 0) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("タイトル")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
-                    TextField("タイトル", text: Bindable(viewModel).title)
-                        .textFieldStyle(.roundedBorder)
-                        .disabled(viewModel.isSaving)
-                    if let error = viewModel.titleError {
+                    TextField(
+                        "タイトル",
+                        text: Binding(
+                            get: { viewModel.uiState.title },
+                            set: { viewModel.onTitleChange($0) }
+                        )
+                    )
+                    .textFieldStyle(.roundedBorder)
+                    .disabled(uiState.isSaving)
+                    if let error = uiState.titleError {
                         Text(error)
                             .font(.caption)
                             .foregroundStyle(.red)
@@ -74,11 +76,18 @@ struct TodoEditView: View {
                     Text("メモ")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
-                    TextField("メモ", text: Bindable(viewModel).memo, axis: .vertical)
-                        .textFieldStyle(.roundedBorder)
-                        .lineLimit(3...10)
-                        .disabled(viewModel.isSaving)
-                    if let error = viewModel.memoError {
+                    TextField(
+                        "メモ",
+                        text: Binding(
+                            get: { viewModel.uiState.memo },
+                            set: { viewModel.onMemoChange($0) }
+                        ),
+                        axis: .vertical
+                    )
+                    .textFieldStyle(.roundedBorder)
+                    .lineLimit(3...10)
+                    .disabled(uiState.isSaving)
+                    if let error = uiState.memoError {
                         Text(error)
                             .font(.caption)
                             .foregroundStyle(.red)
@@ -93,21 +102,9 @@ struct TodoEditView: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled(!viewModel.canSave)
+                .disabled(!uiState.canSave)
             }
             .padding(16)
-        }
-    }
-
-    private func handleBack() {
-        guard let viewModel else {
-            dismiss()
-            return
-        }
-        if viewModel.hasChanges {
-            showDiscardAlert = true
-        } else {
-            dismiss()
         }
     }
 }

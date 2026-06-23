@@ -2,15 +2,14 @@ import SwiftUI
 
 struct DeleteConfirmDialog: ViewModifier {
     let title: String?
+    @Binding var isPresented: Bool
     let onConfirm: () -> Void
     let onCancel: () -> Void
-
-    var isPresented: Bool { title != nil }
 
     func body(content: Content) -> some View {
         content.alert(
             "削除の確認",
-            isPresented: .constant(isPresented),
+            isPresented: $isPresented,
             presenting: title
         ) { _ in
             Button("キャンセル", role: .cancel) { onCancel() }
@@ -24,9 +23,15 @@ struct DeleteConfirmDialog: ViewModifier {
 extension View {
     func deleteConfirmDialog(
         title: String?,
+        isPresented: Binding<Bool>,
         onConfirm: @escaping () -> Void,
         onCancel: @escaping () -> Void
     ) -> some View {
-        modifier(DeleteConfirmDialog(title: title, onConfirm: onConfirm, onCancel: onCancel))
+        modifier(DeleteConfirmDialog(
+            title: title,
+            isPresented: isPresented,
+            onConfirm: onConfirm,
+            onCancel: onCancel
+        ))
     }
 }

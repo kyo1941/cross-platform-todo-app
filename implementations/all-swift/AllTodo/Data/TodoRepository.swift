@@ -1,83 +1,110 @@
 import Foundation
-import SwiftData
 
 @MainActor
-final class TodoRepository {
+protocol TodoRepository: AnyObject {
+    func observeAll() -> AsyncThrowingStream<[TodoItem], Error>
+    func fetchAll() throws -> [TodoItem]
+    func getById(_ id: String) throws -> TodoItem?
+    @discardableResult func add(title: String, memo: String?) throws -> TodoItem
+    func update(_ item: TodoItem) throws
+    func delete(id: String) throws
+    func toggleDone(id: String) throws
+    func reorder(orderedIds: [String]) throws
+}
 
-    private let modelContext: ModelContext
+@MainActor
+final class DefaultTodoRepository: TodoRepository {
+    private let localDataSource: TodoLocalDataSource
+    private var continuations: [UUID: AsyncThrowingStream<[TodoItem], Error>.Continuation] = [:]
 
-    init(modelContext: ModelContext) {
-        self.modelContext = modelContext
+    init(localDataSource: TodoLocalDataSource) {
+        self.localDataSource = localDataSource
+    }
+
+    func observeAll() -> AsyncThrowingStream<[TodoItem], Error> {
+        AsyncThrowingStream { continuation in
+            let id = UUID()
+            Task { @MainActor [weak self] in
+                guard let self else {
+                    continuation.finish()
+                    return
+                }
+                continuations[id] = continuation
+                do {
+                    continuation.yield(try fetchAll())
+                } catch {
+                    continuation.finish(throwing: error)
+                }
+            }
+            continuation.onTermination = { _ in
+                Task { @MainActor [weak self] in
+                    self?.continuations[id] = nil
+                }
+            }
+        }
     }
 
     func fetchAll() throws -> [TodoItem] {
-        let descriptor = FetchDescriptor<TodoItem>(
-            sortBy: [SortDescriptor(\.sortOrder, order: .forward)]
-        )
-        return try modelContext.fetch(descriptor)
+        try localDataSource.fetchAll()
     }
 
     func getById(_ id: String) throws -> TodoItem? {
-        let descriptor = FetchDescriptor<TodoItem>(
-            predicate: #Predicate { $0.id == id }
-        )
-        return try modelContext.fetch(descriptor).first
-    }
-
-    func getMaxSortOrder() throws -> Int? {
-        let descriptor = FetchDescriptor<TodoItem>(
-            sortBy: [SortDescriptor(\.sortOrder, order: .reverse)]
-        )
-        var limited = descriptor
-        limited.fetchLimit = 1
-        return try modelContext.fetch(limited).first?.sortOrder
+        try localDataSource.getById(id)
     }
 
     @discardableResult
     func add(title: String, memo: String?) throws -> TodoItem {
         let now = Int64(Date().timeIntervalSince1970 * 1000)
-        let nextSortOrder = (try getMaxSortOrder() ?? -1) + 1
         let trimmedMemo = memo?.trimmingCharacters(in: .whitespacesAndNewlines)
         let item = TodoItem(
             id: UUID().uuidString,
             title: title.trimmingCharacters(in: .whitespacesAndNewlines),
             memo: trimmedMemo?.isEmpty == true ? nil : trimmedMemo,
             isDone: false,
-            sortOrder: nextSortOrder,
+            sortOrder: (try localDataSource.getMaxSortOrder() ?? -1) + 1,
             createdAt: now,
             updatedAt: now
         )
-        modelContext.insert(item)
-        try modelContext.save()
+        try localDataSource.insert(item)
+        publishAll()
         return item
     }
 
     func update(_ item: TodoItem) throws {
-        item.title = item.title.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedMemo = item.memo?.trimmingCharacters(in: .whitespacesAndNewlines)
-        item.memo = trimmedMemo?.isEmpty == true ? nil : trimmedMemo
-        try modelContext.save()
-    }
-
-    func toggleDone(id: String) throws {
-        guard let item = try getById(id) else { return }
-        item.isDone = !item.isDone
-        item.updatedAt = Int64(Date().timeIntervalSince1970 * 1000)
-        try modelContext.save()
+        var normalized = item
+        normalized.title = item.title.trimmingCharacters(in: .whitespacesAndNewlines)
+        normalized.memo = trimmedMemo?.isEmpty == true ? nil : trimmedMemo
+        try localDataSource.update(normalized)
+        publishAll()
     }
 
     func delete(id: String) throws {
-        guard let item = try getById(id) else { return }
-        modelContext.delete(item)
-        try modelContext.save()
+        try localDataSource.delete(id: id)
+        publishAll()
+    }
+
+    func toggleDone(id: String) throws {
+        guard var item = try localDataSource.getById(id) else { return }
+        item.isDone.toggle()
+        item.updatedAt = Int64(Date().timeIntervalSince1970 * 1000)
+        try localDataSource.update(item)
+        publishAll()
     }
 
     func reorder(orderedIds: [String]) throws {
-        let allItems = try fetchAll()
-        let lookup = Dictionary(uniqueKeysWithValues: allItems.map { ($0.id, $0) })
-        for (index, id) in orderedIds.enumerated() {
-            lookup[id]?.sortOrder = index
+        let orders = Dictionary(uniqueKeysWithValues: orderedIds.enumerated().map { ($0.element, $0.offset) })
+        try localDataSource.updateSortOrders(orders)
+        publishAll()
+    }
+
+    private func publishAll() {
+        do {
+            let items = try fetchAll()
+            continuations.values.forEach { $0.yield(items) }
+        } catch {
+            continuations.values.forEach { $0.finish(throwing: error) }
+            continuations.removeAll()
         }
-        try modelContext.save()
     }
 }

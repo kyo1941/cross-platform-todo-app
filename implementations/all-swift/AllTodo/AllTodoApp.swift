@@ -7,6 +7,6 @@ struct AllTodoApp: App {
         WindowGroup {
             ContentView()
         }
-        .modelContainer(for: TodoItem.self)
+        .modelContainer(for: TodoEntity.self)
     }
 }

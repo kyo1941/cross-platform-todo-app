@@ -66,7 +66,8 @@ private struct TodoRowFramePreferenceKey: PreferenceKey {
 }
 
 struct TodoListView: View {
-    @Environment(\.modelContext) private var modelContext
+    let repository: any TodoRepository
+
     @State private var viewModel: TodoListViewModel?
     @State private var navigateToAdd = false
     @State private var editTargetId: String?
@@ -87,32 +88,41 @@ struct TodoListView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {
-                    navigateToAdd = true
+                    viewModel?.onAddClick()
                 } label: {
                     Image(systemName: "plus")
                 }
             }
         }
         .navigationDestination(isPresented: $navigateToAdd) {
-            TodoEditView(todoId: nil)
+            TodoEditView(repository: repository, todoId: nil)
         }
         .navigationDestination(item: $editTargetId) { id in
-            TodoEditView(todoId: id)
+            TodoEditView(repository: repository, todoId: id)
         }
         .onAppear {
             if viewModel == nil {
-                let repo = TodoRepository(modelContext: modelContext)
-                viewModel = TodoListViewModel(repository: repo)
+                viewModel = TodoListViewModel(repository: repository)
             }
-            viewModel?.loadItems()
+        }
+        .onChange(of: viewModel?.event) { _, newValue in
+            guard let event = newValue else { return }
+            switch event {
+            case .navigateToAdd:
+                navigateToAdd = true
+            case .navigateToEdit(let id):
+                editTargetId = id
+            }
+            viewModel?.clearEvent()
         }
     }
 
     @ViewBuilder
     private func listContent(viewModel: TodoListViewModel) -> some View {
-        if viewModel.isLoading {
+        let uiState = viewModel.uiState
+        if uiState.isLoading {
             ProgressView()
-        } else if viewModel.items.isEmpty {
+        } else if uiState.items.isEmpty {
             ContentUnavailableView(
                 "TODOがありません",
                 systemImage: "checklist",
@@ -121,12 +131,12 @@ struct TodoListView: View {
         } else {
             ScrollView {
                 LazyVStack(spacing: 8) {
-                    ForEach(viewModel.items, id: \.id) { item in
+                    ForEach(uiState.items, id: \.id) { item in
                         TodoRow(
                             item: item,
                             onToggleDone: { viewModel.onToggleDone(id: item.id) },
                             onDelete: { viewModel.onDeleteRequest(id: item.id) },
-                            onTap: { editTargetId = item.id },
+                            onTap: { viewModel.onItemClick(id: item.id) },
                             onDragChanged: { value in
                                 handleDragChanged(item: item, value: value, viewModel: viewModel)
                             },
@@ -157,9 +167,17 @@ struct TodoListView: View {
             .background(Color(.systemGroupedBackground))
             .coordinateSpace(name: "todo-list")
             .onPreferenceChange(TodoRowFramePreferenceKey.self) { rowFrames = $0 }
-            .animation(.default, value: viewModel.items.map(\.id))
+            .animation(.default, value: uiState.items.map(\.id))
             .deleteConfirmDialog(
-                title: viewModel.deleteTarget?.title,
+                title: uiState.deleteConfirmation.target?.title,
+                isPresented: Binding(
+                    get: { uiState.deleteConfirmation.target != nil },
+                    set: { isPresented in
+                        if !isPresented {
+                            viewModel.onDeleteCancel()
+                        }
+                    }
+                ),
                 onConfirm: { viewModel.onDeleteConfirm() },
                 onCancel: { viewModel.onDeleteCancel() }
             )
@@ -177,11 +195,11 @@ struct TodoListView: View {
 
         guard let draggedItemId,
               let startMidY = dragStartMidY,
-              let fromIndex = viewModel.items.firstIndex(where: { $0.id == draggedItemId })
+              let fromIndex = viewModel.uiState.items.firstIndex(where: { $0.id == draggedItemId })
         else { return }
 
         let currentY = startMidY + value.translation.height
-        let destination = viewModel.items
+        let destination = viewModel.uiState.items
             .compactMap { todo -> (item: TodoItem, distance: CGFloat)? in
                 guard let frame = rowFrames[todo.id] else { return nil }
                 return (todo, abs(frame.midY - currentY))
@@ -191,7 +209,7 @@ struct TodoListView: View {
 
         guard let destination,
               destination.id != draggedItemId,
-              let toIndex = viewModel.items.firstIndex(where: { $0.id == destination.id })
+              let toIndex = viewModel.uiState.items.firstIndex(where: { $0.id == destination.id })
         else { return }
 
         viewModel.onMoveItem(fromIndex: fromIndex, toIndex: toIndex)
