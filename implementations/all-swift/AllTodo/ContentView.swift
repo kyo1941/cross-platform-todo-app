@@ -3,12 +3,12 @@ import SwiftUI
 struct ContentView: View {
     var body: some View {
         NavigationStack {
-            Text("TODO")
-                .navigationTitle("TODO")
+            TodoListView()
         }
     }
 }
 
 #Preview {
     ContentView()
+        .modelContainer(for: TodoItem.self, inMemory: true)
 }
