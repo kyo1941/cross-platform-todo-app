@@ -2,21 +2,15 @@ import Foundation
 import SwiftData
 import SwiftUI
 
-/// Presentation-layer state and actions for the TODO edit/create screen.
-/// Matches Kotlin's `TodoEditViewModel` and `TodoEditUiState`.
 @MainActor
 @Observable
 final class TodoEditViewModel {
-
-    // MARK: - Constants
 
     static let titleMaxLength = 255
     static let memoMaxLength = 1000
     static let errorTitleRequired = "タイトルを入力してください"
     static let errorTitleTooLong = "タイトルは255文字以内で入力してください"
     static let errorMemoTooLong = "メモは1000文字以内で入力してください"
-
-    // MARK: - UI State
 
     enum Mode {
         case loading
@@ -32,13 +26,10 @@ final class TodoEditViewModel {
     private(set) var canSave: Bool = false
     private(set) var isSaving: Bool = false
 
-    /// Whether save or cancel completed and the view should dismiss.
     var shouldDismiss: Bool = false
 
-    /// Whether the title has been edited at least once (to suppress error on pristine forms).
     private var titleChangedOnce = false
 
-    /// Whether unsaved changes exist (for back-navigation confirmation).
     var hasChanges: Bool {
         switch mode {
         case .loading:
@@ -51,7 +42,6 @@ final class TodoEditViewModel {
         }
     }
 
-    /// Navigation bar title based on mode.
     var navigationTitle: String {
         switch mode {
         case .loading, .edit:
@@ -61,11 +51,7 @@ final class TodoEditViewModel {
         }
     }
 
-    // MARK: - Dependencies
-
     private let repository: TodoRepository
-
-    // MARK: - Init
 
     init(repository: TodoRepository, todoId: String?) {
         self.repository = repository
@@ -77,12 +63,9 @@ final class TodoEditViewModel {
         }
     }
 
-    // MARK: - Data Loading
-
     private func loadItem(id: String) {
         do {
             guard let item = try repository.getById(id) else {
-                // Item was deleted externally — dismiss the screen.
                 shouldDismiss = true
                 return
             }
@@ -95,8 +78,6 @@ final class TodoEditViewModel {
             shouldDismiss = true
         }
     }
-
-    // MARK: - Actions
 
     private func onTitleChanged() {
         titleChangedOnce = true
@@ -134,8 +115,6 @@ final class TodoEditViewModel {
     func onCancelClick() {
         shouldDismiss = true
     }
-
-    // MARK: - Validation
 
     private func validate() {
         let trimmedTitleLength = title.trimmingCharacters(in: .whitespacesAndNewlines).count

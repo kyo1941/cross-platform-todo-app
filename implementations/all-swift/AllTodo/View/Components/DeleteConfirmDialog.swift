@@ -1,7 +1,5 @@
 import SwiftUI
 
-/// Reusable delete confirmation dialog.
-/// Matches Kotlin's `DeleteConfirmDialog` (S03).
 struct DeleteConfirmDialog: ViewModifier {
     let title: String?
     let onConfirm: () -> Void
@@ -24,7 +22,6 @@ struct DeleteConfirmDialog: ViewModifier {
 }
 
 extension View {
-    /// Presents a delete confirmation dialog for the item with the given title.
     func deleteConfirmDialog(
         title: String?,
         onConfirm: @escaping () -> Void,

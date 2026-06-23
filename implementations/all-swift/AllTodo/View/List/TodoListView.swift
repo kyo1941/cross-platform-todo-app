@@ -1,7 +1,5 @@
 import SwiftUI
 
-/// A single row in the TODO list.
-/// Matches Kotlin's `TodoRow` composable: checkbox, title, memo, drag handle, delete button.
 struct TodoRow: View {
     let item: TodoItem
     let onToggleDone: () -> Void
@@ -11,7 +9,6 @@ struct TodoRow: View {
     var body: some View {
         Button(action: onTap) {
             HStack(spacing: 12) {
-                // Checkbox
                 Button(action: onToggleDone) {
                     Image(systemName: item.isDone ? "checkmark.circle.fill" : "circle")
                         .font(.title2)
@@ -19,7 +16,6 @@ struct TodoRow: View {
                 }
                 .buttonStyle(.plain)
 
-                // Title + Memo
                 VStack(alignment: .leading, spacing: 2) {
                     Text(item.title)
                         .font(.body)
@@ -36,7 +32,6 @@ struct TodoRow: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                // Delete button
                 Button(action: onDelete) {
                     Image(systemName: "trash")
                         .foregroundStyle(.red)
@@ -50,8 +45,6 @@ struct TodoRow: View {
     }
 }
 
-/// TODO list screen (S01).
-/// Matches Kotlin's `TodoListScreen` composable.
 struct TodoListView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var viewModel: TodoListViewModel?

@@ -1,7 +1,5 @@
 import SwiftUI
 
-/// TODO edit/create screen (S02).
-/// Matches Kotlin's `TodoEditScreen` composable.
 struct TodoEditView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
@@ -57,7 +55,6 @@ struct TodoEditView: View {
     private func editForm(viewModel: TodoEditViewModel) -> some View {
         ScrollView {
             VStack(spacing: 0) {
-                // Title field
                 VStack(alignment: .leading, spacing: 4) {
                     Text("タイトル")
                         .font(.subheadline)
@@ -73,7 +70,6 @@ struct TodoEditView: View {
                 }
                 .padding(.bottom, 16)
 
-                // Memo field
                 VStack(alignment: .leading, spacing: 4) {
                     Text("メモ")
                         .font(.subheadline)
@@ -90,7 +86,6 @@ struct TodoEditView: View {
                 }
                 .padding(.bottom, 24)
 
-                // Save button
                 Button {
                     viewModel.onSaveClick()
                 } label: {
