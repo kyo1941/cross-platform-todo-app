@@ -2,47 +2,42 @@ import SwiftUI
 
 struct TodoEditView: View {
     @Environment(\.dismiss) private var dismiss
-    @State private var viewModel: TodoEditViewModel?
+    @State private var viewModel: TodoEditViewModel
 
     let repository: any TodoRepository
     let todoId: String?
 
+    init(repository: any TodoRepository, todoId: String?) {
+        self.repository = repository
+        self.todoId = todoId
+        _viewModel = State(initialValue: TodoEditViewModel(repository: repository, todoId: todoId))
+    }
+
     var body: some View {
-        Group {
-            if let viewModel {
-                editForm(viewModel: viewModel)
-            } else {
-                ProgressView()
-            }
-        }
-        .navigationTitle(viewModel?.uiState.navigationTitle ?? "TODOを編集")
+        editForm(viewModel: viewModel)
+        .navigationTitle(viewModel.uiState.navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .navigation) {
                 Button {
-                    viewModel?.onCancelClick()
+                    viewModel.onCancelClick()
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: "chevron.backward")
                         Text("戻る")
                     }
                 }
-                .disabled(viewModel?.uiState.isSaving == true)
+                .disabled(viewModel.uiState.isSaving)
             }
         }
-        .onAppear {
-            if viewModel == nil {
-                viewModel = TodoEditViewModel(repository: repository, todoId: todoId)
-            }
-        }
-        .onChange(of: viewModel?.event) { _, newValue in
+        .onChange(of: viewModel.event) { _, newValue in
             guard let event = newValue else { return }
             switch event {
             case .navigateBack:
                 dismiss()
             }
-            viewModel?.clearEvent()
+            viewModel.clearEvent()
         }
     }
 

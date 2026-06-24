@@ -68,7 +68,7 @@ private struct TodoRowFramePreferenceKey: PreferenceKey {
 struct TodoListView: View {
     let repository: any TodoRepository
 
-    @State private var viewModel: TodoListViewModel?
+    @State private var viewModel: TodoListViewModel
     @State private var navigateToAdd = false
     @State private var editTargetId: String?
     @State private var draggedItemId: String?
@@ -76,19 +76,18 @@ struct TodoListView: View {
     @State private var didReorderDuringDrag = false
     @State private var rowFrames: [String: CGRect] = [:]
 
+    init(repository: any TodoRepository) {
+        self.repository = repository
+        _viewModel = State(initialValue: TodoListViewModel(repository: repository))
+    }
+
     var body: some View {
-        Group {
-            if let viewModel {
-                listContent(viewModel: viewModel)
-            } else {
-                ProgressView()
-            }
-        }
+        listContent(viewModel: viewModel)
         .navigationTitle("TODO")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {
-                    viewModel?.onAddClick()
+                    viewModel.onAddClick()
                 } label: {
                     Image(systemName: "plus")
                 }
@@ -100,12 +99,7 @@ struct TodoListView: View {
         .navigationDestination(item: $editTargetId) { id in
             TodoEditView(repository: repository, todoId: id)
         }
-        .onAppear {
-            if viewModel == nil {
-                viewModel = TodoListViewModel(repository: repository)
-            }
-        }
-        .onChange(of: viewModel?.event) { _, newValue in
+        .onChange(of: viewModel.event) { _, newValue in
             guard let event = newValue else { return }
             switch event {
             case .navigateToAdd:
@@ -113,20 +107,20 @@ struct TodoListView: View {
             case .navigateToEdit(let id):
                 editTargetId = id
             }
-            viewModel?.clearEvent()
+            viewModel.clearEvent()
         }
         .deleteConfirmDialog(
-            title: viewModel?.uiState.deleteConfirmation.target?.title,
+            title: viewModel.uiState.deleteConfirmation.target?.title,
             isPresented: Binding(
-                get: { viewModel?.uiState.deleteConfirmation.target != nil },
+                get: { viewModel.uiState.deleteConfirmation.target != nil },
                 set: { isPresented in
                     if !isPresented {
-                        viewModel?.onDeleteCancel()
+                        viewModel.onDeleteCancel()
                     }
                 }
             ),
-            onConfirm: { viewModel?.onDeleteConfirm() },
-            onCancel: { viewModel?.onDeleteCancel() }
+            onConfirm: { viewModel.onDeleteConfirm() },
+            onCancel: { viewModel.onDeleteCancel() }
         )
     }
 
