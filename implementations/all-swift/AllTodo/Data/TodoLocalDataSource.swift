@@ -60,7 +60,7 @@ final class SwiftDataTodoLocalDataSource: TodoLocalDataSource {
     func updateSortOrders(_ orders: [String: Int]) throws {
         let descriptor = FetchDescriptor<TodoEntity>()
         let entities = try modelContext.fetch(descriptor)
-        let lookup = Dictionary(uniqueKeysWithValues: entities.map { ($0.id, $0) })
+        let lookup = Dictionary(entities.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         for (id, sortOrder) in orders {
             lookup[id]?.sortOrder = sortOrder
         }

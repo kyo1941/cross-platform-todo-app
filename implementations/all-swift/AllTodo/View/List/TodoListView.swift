@@ -172,7 +172,7 @@ struct TodoListView: View {
                 .padding(.vertical, 8)
             }
             .background(Color(.systemGroupedBackground))
-            .coordinateSpace(name: "todo-list")
+            .coordinateSpace(.named("todo-list"))
             .onPreferenceChange(TodoRowFramePreferenceKey.self) { rowFrames = $0 }
             .animation(.default, value: uiState.items.map(\.id))
         }

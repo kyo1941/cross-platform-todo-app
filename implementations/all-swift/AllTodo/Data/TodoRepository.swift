@@ -22,26 +22,20 @@ final class DefaultTodoRepository: TodoRepository {
     }
 
     func observeAll() -> AsyncThrowingStream<[TodoItem], Error> {
-        AsyncThrowingStream { continuation in
-            let id = UUID()
+        let (stream, continuation) = AsyncThrowingStream<[TodoItem], Error>.makeStream()
+        let id = UUID()
+        continuations[id] = continuation
+        continuation.onTermination = { _ in
             Task { @MainActor [weak self] in
-                guard let self else {
-                    continuation.finish()
-                    return
-                }
-                continuations[id] = continuation
-                do {
-                    continuation.yield(try fetchAll())
-                } catch {
-                    continuation.finish(throwing: error)
-                }
-            }
-            continuation.onTermination = { _ in
-                Task { @MainActor [weak self] in
-                    self?.continuations[id] = nil
-                }
+                self?.continuations[id] = nil
             }
         }
+        do {
+            continuation.yield(try fetchAll())
+        } catch {
+            continuation.finish(throwing: error)
+        }
+        return stream
     }
 
     func fetchAll() throws -> [TodoItem] {

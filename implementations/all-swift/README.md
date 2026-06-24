@@ -8,7 +8,7 @@ Swift + SwiftUI and SwiftData.
 MVVM + Repository + DataSource, with dependencies injected through SwiftUI
 environment values:
 
-```
+```text
 View/ (SwiftUI views)  ->  ViewModel/ (@Observable)
                          ->  Repository protocol
                          ->  DataSource protocol
