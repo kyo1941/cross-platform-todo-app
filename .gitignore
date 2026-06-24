@@ -1,0 +1,9 @@
+# macOS
+.DS_Store
+
+# IDEs / editors
+.idea/
+.vscode/
+
+# Swift / SourceKit-LSP generated config
+buildServer.json
