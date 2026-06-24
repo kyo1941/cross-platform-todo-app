@@ -115,6 +115,19 @@ struct TodoListView: View {
             }
             viewModel?.clearEvent()
         }
+        .deleteConfirmDialog(
+            title: viewModel?.uiState.deleteConfirmation.target?.title,
+            isPresented: Binding(
+                get: { viewModel?.uiState.deleteConfirmation.target != nil },
+                set: { isPresented in
+                    if !isPresented {
+                        viewModel?.onDeleteCancel()
+                    }
+                }
+            ),
+            onConfirm: { viewModel?.onDeleteConfirm() },
+            onCancel: { viewModel?.onDeleteCancel() }
+        )
     }
 
     @ViewBuilder
@@ -168,19 +181,6 @@ struct TodoListView: View {
             .coordinateSpace(name: "todo-list")
             .onPreferenceChange(TodoRowFramePreferenceKey.self) { rowFrames = $0 }
             .animation(.default, value: uiState.items.map(\.id))
-            .deleteConfirmDialog(
-                title: uiState.deleteConfirmation.target?.title,
-                isPresented: Binding(
-                    get: { uiState.deleteConfirmation.target != nil },
-                    set: { isPresented in
-                        if !isPresented {
-                            viewModel.onDeleteCancel()
-                        }
-                    }
-                ),
-                onConfirm: { viewModel.onDeleteConfirm() },
-                onCancel: { viewModel.onDeleteCancel() }
-            )
         }
     }
 
