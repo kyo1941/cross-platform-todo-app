@@ -19,6 +19,7 @@ struct TodoListUiState: Equatable {
 }
 
 enum TodoListEvent: Equatable {
+    case none
     case navigateToAdd
     case navigateToEdit(String)
 }
@@ -27,7 +28,7 @@ enum TodoListEvent: Equatable {
 @Observable
 final class TodoListViewModel {
     var uiState = TodoListUiState()
-    var event: TodoListEvent?
+    var event: TodoListEvent = .none
 
     private let repository: any TodoRepository
     private var deleteTargetId: String?
@@ -96,7 +97,7 @@ final class TodoListViewModel {
     }
 
     func clearEvent() {
-        event = nil
+        event = .none
     }
 
     private func observeItems() {

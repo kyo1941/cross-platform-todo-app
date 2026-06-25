@@ -65,6 +65,7 @@ enum TodoEditUiState: Equatable {
 }
 
 enum TodoEditEvent: Equatable {
+    case none
     case navigateBack
 }
 
@@ -78,7 +79,7 @@ final class TodoEditViewModel {
     static let errorMemoTooLong = "メモは1000文字以内で入力してください"
 
     var uiState: TodoEditUiState
-    var event: TodoEditEvent?
+    var event: TodoEditEvent = .none
 
     private let repository: any TodoRepository
     private var titleChangedOnce = false
@@ -142,7 +143,7 @@ final class TodoEditViewModel {
     }
 
     func clearEvent() {
-        event = nil
+        event = .none
     }
 
     private func loadItem(id: String) {

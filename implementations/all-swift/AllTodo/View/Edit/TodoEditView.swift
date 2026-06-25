@@ -32,8 +32,9 @@ struct TodoEditView: View {
             }
         }
         .onChange(of: viewModel.event) { _, newValue in
-            guard let event = newValue else { return }
-            switch event {
+            switch newValue {
+            case .none:
+                break
             case .navigateBack:
                 dismiss()
             }

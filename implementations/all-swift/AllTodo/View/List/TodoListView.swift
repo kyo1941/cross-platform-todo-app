@@ -100,8 +100,9 @@ struct TodoListView: View {
             TodoEditView(repository: repository, todoId: id)
         }
         .onChange(of: viewModel.event) { _, newValue in
-            guard let event = newValue else { return }
-            switch event {
+            switch newValue {
+            case .none:
+                break
             case .navigateToAdd:
                 navigateToAdd = true
             case .navigateToEdit(let id):
