@@ -1,17 +1,42 @@
-# crosstodo_flutter
+# flutter
 
-A new Flutter project.
+Cross-platform implementation of the shared TODO app spec, using
+Dart + Flutter, Riverpod (state + DI), drift (reactive SQLite), and go_router.
 
-## Getting Started
+## Architecture
 
-This project is a starting point for a Flutter application.
+MVVM + Repository, in three layers:
 
-A few resources to get you started if this is your first Flutter project:
+```
+ui/ (widgets/screens)  ->  presentation/ (Notifier + UiState)  ->  data/ (Repository -> LocalDataSource -> drift)
+```
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+- `data/` — `TodoItem` domain model, drift `TodoDatabase`/table (`todo_item`),
+  `TodoLocalDataSource`, and `TodoRepository` (single source of truth).
+- `presentation/list` and `presentation/edit` — Riverpod `Notifier`s and the
+  sum-type UI states (`DeleteConfirmation`, `TodoEditUiState` as sealed classes).
+- `ui/` — `TodoListScreen` (S01), `TodoEditScreen` (S02), `DeleteConfirmDialog` (S03).
+- `di/` — Riverpod providers wiring the database/data-source/repository graph.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+The list watches `TodoRepository.observeAll()` as a `Stream` (drift `.watch()`),
+so toggles, deletes, and reorders propagate reactively without the view model
+rewriting the list.
+
+## Setup
+
+drift generates `*.g.dart` (gitignored); generate it before building or testing:
+
+```sh
+flutter pub get
+dart run build_runner build
+```
+
+## Build & run
+
+```sh
+flutter run                        # run on a connected device/simulator
+flutter test                       # repository + view-model unit tests
+flutter analyze                    # static analysis
+```
+
+Requires the Flutter SDK. Targets Android and iOS (`flutter create` platforms).
