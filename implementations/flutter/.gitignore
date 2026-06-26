@@ -33,6 +33,10 @@ migrate_working_dir/
 /build/
 /coverage/
 
+# Generated code (drift, etc.) — regenerated via `dart run build_runner build`,
+# excluded so only hand-written source counts in the cross-impl comparison.
+*.g.dart
+
 # Symbolication related
 app.*.symbols
 
