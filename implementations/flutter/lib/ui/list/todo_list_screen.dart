@@ -129,9 +129,11 @@ class _TodoListBody extends StatelessWidget {
     return ReorderableListView.builder(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 88),
       itemCount: items.length,
+      // Reorder only via the explicit drag handle (like all-kotlin/all-swift),
+      // not by long-pressing the whole row.
+      buildDefaultDragHandles: false,
       // onReorderItem already adjusts newIndex to the final destination index.
       onReorderItem: (oldIndex, newIndex) => onReorder(oldIndex, newIndex),
-      proxyDecorator: (child, index, animation) => child,
       itemBuilder: (context, index) {
         final item = items[index];
         return _TodoRow(

@@ -41,10 +41,10 @@ class TodoApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       title: 'TODO',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
-        useMaterial3: true,
-      ),
+      // Default Material 3 palette, following the system light/dark setting,
+      // matching the framework-default theming used by all-kotlin/all-swift.
+      theme: ThemeData(useMaterial3: true),
+      darkTheme: ThemeData(useMaterial3: true, brightness: Brightness.dark),
       routerConfig: _router,
     );
   }
