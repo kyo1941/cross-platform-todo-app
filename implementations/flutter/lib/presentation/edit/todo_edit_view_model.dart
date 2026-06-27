@@ -12,11 +12,13 @@ const errorTitleRequired = 'タイトルを入力してください';
 const errorTitleTooLong = 'タイトルは255文字以内で入力してください';
 const errorMemoTooLong = 'メモは1000文字以内で入力してください';
 
-/// Keyed by the to-do id being edited; null means "add" mode.
-final todoEditViewModelProvider = NotifierProvider.family<TodoEditViewModel,
-    TodoEditUiState, String?>(TodoEditViewModel.new);
+/// Keyed by the to-do id being edited; null means "add" mode. autoDispose so
+/// each visit to the edit screen starts from a fresh state.
+final todoEditViewModelProvider = NotifierProvider.autoDispose
+    .family<TodoEditViewModel, TodoEditUiState, String?>(TodoEditViewModel.new);
 
-class TodoEditViewModel extends FamilyNotifier<TodoEditUiState, String?> {
+class TodoEditViewModel
+    extends AutoDisposeFamilyNotifier<TodoEditUiState, String?> {
   final StreamController<void> _navigateBack =
       StreamController<void>.broadcast();
 
