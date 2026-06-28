@@ -8,8 +8,6 @@ import '../../presentation/list/todo_list_ui_state.dart';
 import '../../presentation/list/todo_list_view_model.dart';
 import '../components/delete_confirm_dialog.dart';
 
-/// S01: the to-do list. Shows items, the add button, and per-item check,
-/// delete, navigation, and drag-to-reorder interactions.
 class TodoListScreen extends ConsumerStatefulWidget {
   const TodoListScreen({
     super.key,
@@ -129,7 +127,7 @@ class _TodoListBody extends StatelessWidget {
     return ReorderableListView.builder(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 88),
       itemCount: items.length,
-      // Reorder only via the explicit drag handle (like all-kotlin/all-swift),
+      // Reorder only via the explicit drag handle,
       // not by long-pressing the whole row.
       buildDefaultDragHandles: false,
       // onReorderItem already adjusts newIndex to the final destination index.

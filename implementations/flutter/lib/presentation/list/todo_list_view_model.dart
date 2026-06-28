@@ -16,7 +16,6 @@ class TodoListViewModel extends Notifier<TodoListUiState> {
   final StreamController<TodoListEvent> _events =
       StreamController<TodoListEvent>.broadcast();
 
-  /// One-shot navigation events, consumed by the list screen.
   Stream<TodoListEvent> get events => _events.stream;
 
   late final TodoRepository _repository;

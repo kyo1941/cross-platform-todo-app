@@ -1,5 +1,3 @@
-/// Domain model for a single to-do entry. Shared across all implementations
-/// (see the data model in the project spec).
 class TodoItem {
   const TodoItem({
     required this.id,
@@ -17,10 +15,8 @@ class TodoItem {
   final bool isDone;
   final int sortOrder;
 
-  /// Epoch millis (UTC). Set once at creation, never changed afterwards.
   final int createdAt;
 
-  /// Epoch millis (UTC). Overwritten with the current time on every update.
   final int updatedAt;
 
   TodoItem copyWith({

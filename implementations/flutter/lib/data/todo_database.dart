@@ -7,10 +7,6 @@ import 'package:path_provider/path_provider.dart';
 
 part 'todo_database.g.dart';
 
-/// drift persistence model. The table name and (via build.yaml) the column
-/// names follow the shared SQL schema (snake_case); Dart getters stay
-/// camelCase. The generated row class is named [TodoRow] to keep it distinct
-/// from the domain [TodoItem].
 @DataClassName('TodoRow')
 class TodoItems extends Table {
   @override
@@ -30,12 +26,8 @@ class TodoItems extends Table {
 
 @DriftDatabase(tables: [TodoItems])
 class TodoDatabase extends _$TodoDatabase {
-  /// Primary constructor. Accepts any [QueryExecutor] so tests can pass an
-  /// in-memory database.
   TodoDatabase(super.e);
 
-  /// Opens the on-device database backed by a file in the app documents
-  /// directory.
   TodoDatabase.open() : super(_openConnection());
 
   @override

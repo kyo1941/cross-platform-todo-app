@@ -4,9 +4,6 @@ import '../data/todo_database.dart';
 import '../data/todo_local_data_source.dart';
 import '../data/todo_repository.dart';
 
-/// Dependency-injection wiring (Riverpod), equivalent to the Hilt modules in
-/// all-kotlin: it builds the database, data source, and repository graph.
-
 final todoDatabaseProvider = Provider<TodoDatabase>((ref) {
   final db = TodoDatabase.open();
   ref.onDispose(db.close);

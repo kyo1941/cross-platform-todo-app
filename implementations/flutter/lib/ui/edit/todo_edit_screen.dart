@@ -6,8 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../presentation/edit/todo_edit_ui_state.dart';
 import '../../presentation/edit/todo_edit_view_model.dart';
 
-/// S02: add/edit form. The same screen is used for both modes, switched by
-/// whether a [todoId] is provided.
 class TodoEditScreen extends ConsumerStatefulWidget {
   const TodoEditScreen({
     super.key,
@@ -50,7 +48,6 @@ class _TodoEditScreenState extends ConsumerState<TodoEditScreen> {
     final viewModel = ref.read(provider.notifier);
     final uiState = ref.watch(provider);
 
-    // Seed the text fields once the existing item finishes loading (edit mode).
     ref.listen<TodoEditUiState>(provider, (previous, next) {
       if (previous is TodoEditLoading && next is TodoEditEdit) {
         _titleController.text = next.title;

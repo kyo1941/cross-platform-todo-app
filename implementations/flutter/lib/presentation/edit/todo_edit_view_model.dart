@@ -12,8 +12,6 @@ const errorTitleRequired = 'タイトルを入力してください';
 const errorTitleTooLong = 'タイトルは255文字以内で入力してください';
 const errorMemoTooLong = 'メモは1000文字以内で入力してください';
 
-/// Keyed by the to-do id being edited; null means "add" mode. autoDispose so
-/// each visit to the edit screen starts from a fresh state.
 final todoEditViewModelProvider = NotifierProvider.autoDispose
     .family<TodoEditViewModel, TodoEditUiState, String?>(TodoEditViewModel.new);
 
@@ -22,13 +20,10 @@ class TodoEditViewModel
   final StreamController<void> _navigateBack =
       StreamController<void>.broadcast();
 
-  /// Emits when the screen should pop back to the list.
   Stream<void> get navigateBack => _navigateBack.stream;
 
   late final TodoRepository _repository;
 
-  /// Whether the title field has been edited at least once, to avoid an error
-  /// on a pristine form.
   bool _titleChangedOnce = false;
 
   @override

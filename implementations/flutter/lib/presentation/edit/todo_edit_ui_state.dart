@@ -1,8 +1,5 @@
 import '../../data/todo_item.dart';
 
-/// Edit-screen state modeled as a sum type: Loading while fetching an existing
-/// item, Add for a brand-new entry, and Edit carrying the original item (see
-/// the state modeling guideline in the project spec).
 sealed class TodoEditUiState {
   const TodoEditUiState();
 
@@ -18,8 +15,6 @@ sealed class TodoEditUiState {
         TodoEditLoading() || TodoEditEdit() => 'TODOを編集',
       };
 
-  /// Returns a copy with the form fields replaced, preserving the variant.
-  /// Loading carries no form, so it is returned unchanged.
   TodoEditUiState copyForm({
     String? title,
     String? memo,

@@ -4,8 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'ui/edit/todo_edit_screen.dart';
 import 'ui/list/todo_list_screen.dart';
 
-/// Application root: hosts navigation between the list (S01) and edit (S02)
-/// screens via go_router.
 class TodoApp extends StatelessWidget {
   TodoApp({super.key});
 
@@ -41,8 +39,6 @@ class TodoApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       title: 'TODO',
-      // Default Material 3 palette, following the system light/dark setting,
-      // matching the framework-default theming used by all-kotlin/all-swift.
       theme: ThemeData(useMaterial3: true),
       darkTheme: ThemeData(useMaterial3: true, brightness: Brightness.dark),
       routerConfig: _router,

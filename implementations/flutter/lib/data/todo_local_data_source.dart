@@ -3,7 +3,6 @@ import 'package:drift/drift.dart';
 import 'todo_database.dart';
 import 'todo_item.dart';
 
-/// Abstraction over the local persistence layer. Works in terms of [TodoItem].
 abstract interface class TodoLocalDataSource {
   Stream<List<TodoItem>> observeAll();
   Future<int?> getMaxSortOrder();
@@ -14,7 +13,6 @@ abstract interface class TodoLocalDataSource {
   Future<void> updateSortOrders(Map<String, int> orders);
 }
 
-/// drift-backed implementation of [TodoLocalDataSource].
 class DriftTodoLocalDataSource implements TodoLocalDataSource {
   DriftTodoLocalDataSource(this._db);
 

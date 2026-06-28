@@ -3,8 +3,6 @@ import 'package:uuid/uuid.dart';
 import 'todo_item.dart';
 import 'todo_local_data_source.dart';
 
-/// Single source of truth for to-do data. The UI layer always goes through the
-/// repository (see the architecture guideline in the project spec).
 abstract interface class TodoRepository {
   Stream<List<TodoItem>> observeAll();
   Future<TodoItem?> getById(String id);
@@ -77,7 +75,6 @@ class DefaultTodoRepository implements TodoRepository {
     return _localDataSource.updateSortOrders(orders);
   }
 
-  /// Trims whitespace and treats a blank memo as null.
   String? _normalizeMemo(String? memo) {
     final trimmed = memo?.trim();
     if (trimmed == null || trimmed.isEmpty) return null;
