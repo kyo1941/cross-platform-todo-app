@@ -7,7 +7,7 @@ Dart + Flutter, Riverpod (state + DI), drift (reactive SQLite), and go_router.
 
 MVVM + Repository, in three layers:
 
-```
+```text
 ui/ (widgets/screens)  ->  presentation/ (Notifier + UiState)  ->  data/ (Repository -> LocalDataSource -> drift)
 ```
 
@@ -35,8 +35,10 @@ dart run build_runner build
 
 ```sh
 flutter run                        # run on a connected device/simulator
-flutter test                       # repository + view-model unit tests
 flutter analyze                    # static analysis
 ```
+
+No automated tests are included, matching the native baselines
+(all-kotlin/all-swift), which don't ship tests either.
 
 Requires the Flutter SDK. Targets Android and iOS (`flutter create` platforms).

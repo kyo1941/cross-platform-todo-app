@@ -55,6 +55,10 @@ class _TodoEditScreenState extends ConsumerState<TodoEditScreen> {
       }
     });
 
+    // Disabled while loading too, so typed input isn't discarded when
+    // ref.listen later overwrites the controller text.
+    final fieldsEnabled = !uiState.isSaving && uiState is! TodoEditLoading;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(uiState.navigationTitle),
@@ -72,7 +76,7 @@ class _TodoEditScreenState extends ConsumerState<TodoEditScreen> {
             TextField(
               controller: _titleController,
               onChanged: viewModel.onTitleChange,
-              enabled: !uiState.isSaving,
+              enabled: fieldsEnabled,
               maxLines: 1,
               decoration: InputDecoration(
                 labelText: 'タイトル',
@@ -84,7 +88,7 @@ class _TodoEditScreenState extends ConsumerState<TodoEditScreen> {
             TextField(
               controller: _memoController,
               onChanged: viewModel.onMemoChange,
-              enabled: !uiState.isSaving,
+              enabled: fieldsEnabled,
               minLines: 3,
               maxLines: null,
               keyboardType: TextInputType.multiline,
